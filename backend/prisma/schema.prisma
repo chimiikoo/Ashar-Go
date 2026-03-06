@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  name          String
+  avatarUrl     String?  @map("avatar_url")
+  role          UserRole @default(USER)
+  locale        String   @default("ru")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  projects      Project[]
+  pledges       Pledge[]
+  comments      Comment[]
+  likes         Like[]
+  savedProjects SavedProject[]
+
+  @@map("users")
+}
+
+model Project {
+  id               String        @id @default(uuid())
+  authorId         String        @map("author_id")
+  title            String
+  description      String
+  shortDescription String        @map("short_description")
+  category         ProjectCategory
+  goalAmount       Decimal       @map("goal_amount") @db.Decimal(12, 2)
+  currentAmount    Decimal       @default(0) @map("current_amount") @db.Decimal(12, 2)
+  fundingType      FundingType   @map("funding_type")
+  projectType      ProjectType   @default(REWARD) @map("project_type")
+  status           ProjectStatus @default(DRAFT)
+  coverImage       String?       @map("cover_image")
+  gallery          String[]
+  deadline         DateTime
+  featured         Boolean       @default(false)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  author    User      @relation(fields: [authorId], references: [id])
+  rewards   Reward[]
+  pledges   Pledge[]
+  comments  Comment[]
+  updates   ProjectUpdate[]
+  likes     Like[]
+  saved     SavedProject[]
+
+  @@map("projects")
+}
+
+model Reward {
+  id               String  @id @default(uuid())
+  projectId        String  @map("project_id")
+  title            String
+  description      String
+  minAmount        Decimal @map("min_amount") @db.Decimal(12, 2)
+  quantityAvailable Int    @map("quantity_available")
+  quantityClaimed  Int     @default(0) @map("quantity_claimed")
+  imageUrl         String? @map("image_url")
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pledges Pledge[]
+
+  @@map("rewards")
+}
+
+model Pledge {
+  id        String       @id @default(uuid())
+  backerId  String       @map("backer_id")
+  projectId String       @map("project_id")
+  rewardId  String?      @map("reward_id")
+  amount    Decimal      @db.Decimal(12, 2)
+  status    PledgeStatus @default(PENDING)
+  paymentId String?      @map("payment_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  backer  User     @relation(fields: [backerId], references: [id])
+  project Project  @relation(fields: [projectId], references: [id])
+  reward  Reward?  @relation(fields: [rewardId], references: [id])
+
+  @@map("pledges")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  projectId String   @map("project_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model ProjectUpdate {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  title     String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_updates")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  projectId String   @map("project_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@map("likes")
+}
+
+model SavedProject {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  projectId String   @map("project_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@map("saved_projects")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum ProjectCategory {
+  BUSINESS
+  TECHNOLOGY
+  EDUCATION
+  SOCIAL
+  CREATIVE
+}
+
+enum FundingType {
+  ALL_OR_NOTHING
+  FLEXIBLE
+}
+
+enum ProjectType {
+  REWARD
+  DONATION
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  FUNDED
+  EXPIRED
+  CANCELLED
+}
+
+enum PledgeStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+}
