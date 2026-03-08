@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "@/components/layout/ClientLayout";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin", "cyrillic"],
-  display: "swap",
-});
+const inter = { variable: "font-inter" }; // Плейсхолдер для переменной
 
 export const metadata: Metadata = {
   title: "Ashar-go — Краудфандинг платформа Кыргызстана",
