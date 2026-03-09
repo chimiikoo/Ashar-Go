@@ -70,7 +70,8 @@ export default function CreateProjectPage() {
     const [fundingType, setFundingType] = useState<'all-or-nothing' | 'flexible'>('all-or-nothing');
     const [projectType, setProjectType] = useState<'reward' | 'donation'>('reward');
     const [rewards, setRewards] = useState<{ title: string; description: string; amount: string; qty: string }[]>([]);
-    const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const [videoUrl, setVideoUrl] = useState<string>('');
+    const [coverImage, setCoverImage] = useState<string | null>(null);
     const [photos, setPhotos] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -96,8 +97,9 @@ export default function CreateProjectPage() {
                     fundingType: fundingType === 'all-or-nothing' ? 'ALL_OR_NOTHING' : 'FLEXIBLE',
                     projectType: projectType === 'reward' ? 'REWARD' : 'DONATION',
                     deadline: new Date(deadline).toISOString(),
-                    videoUrl: videoUrl || undefined,
-                    photos: photos.length > 0 ? photos : undefined,
+                    coverImage,
+                    videoUrl,
+                    gallery: photos.length > 0 ? photos : undefined,
                 }),
             });
             const data = await res.json();
@@ -112,7 +114,7 @@ export default function CreateProjectPage() {
     };
 
     const stepValid = [
-        title.length > 2 && shortDesc.length > 10 && fullDesc.length > 20,
+        title.length > 2 && shortDesc.length > 10 && fullDesc.length > 20 && coverImage && videoUrl,
         true,
         goal.length > 0 && deadline.length > 0,
         true,
@@ -144,9 +146,13 @@ export default function CreateProjectPage() {
                         <Rocket style={{ width: '48px', height: '48px', color: '#0a0a0a' }} />
                     </motion.div>
                     <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', marginBottom: '12px' }}>
-                        Проект запущен! 🚀
+                        Проект отправлен! 🚀
                     </h1>
-                    <p style={{ color: '#666', fontSize: '14px' }}>Перенаправляем в ваш кабинет...</p>
+                    <p style={{ color: '#aaa', fontSize: '15px', marginBottom: '14px' }}>
+                        Ваш проект успешно отправлен на модерацию.<br />
+                        Администраторы проверят его в течение 24 часов.
+                    </p>
+                    <p style={{ color: '#666', fontSize: '13px' }}>Перенаправляем в личный кабинет...</p>
                 </motion.div>
             </div>
         );
@@ -270,14 +276,36 @@ export default function CreateProjectPage() {
                         {/* STEP 0 — Basic info */}
                         {step === 0 && (
                             <>
-                                {/* Cover drop */}
+                                {/* Cover & Media */}
                                 <div style={{ ...card, padding: '28px' }}>
+                                    <h3 style={{ ...label, color: '#fff', fontSize: '13px', marginBottom: '16px' }}>Медиафайлы проекта</h3>
+
                                     <MediaUploader
                                         token={token}
-                                        onVideoChange={url => setVideoUrl(url)}
-                                        onPhotosChange={urls => setPhotos(urls)}
+                                        onCoverChange={url => setCoverImage(url)}
+                                        onGalleryChange={urls => setPhotos(urls)}
                                         accentColor={selectedCat.color}
                                     />
+
+                                    <div style={{ marginTop: '24px' }}>
+                                        <label style={label}>Ссылка на видео (YouTube) *</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="url"
+                                                value={videoUrl}
+                                                onChange={e => setVideoUrl(e.target.value)}
+                                                placeholder="https://www.youtube.com/watch?v=..."
+                                                style={inp}
+                                                onFocus={onFocus}
+                                                onBlur={onBlur}
+                                            />
+                                            {videoUrl && videoUrl.includes('youtube.com') && (
+                                                <div style={{ marginTop: '8px', padding: '10px', borderRadius: '12px', background: 'rgba(163,230,53,0.05)', fontSize: '11px', color: '#a3e635' }}>
+                                                    ✓ Ссылка распознана. Бэкеры смогут увидеть видео в описании.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div style={card}>

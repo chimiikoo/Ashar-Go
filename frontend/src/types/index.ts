@@ -8,13 +8,14 @@ export interface Project {
   authorName: string;
   authorAvatar: string;
   coverImage: string;
+  videoUrl: string; // YouTube URL
   gallery: string[];
   goalAmount: number;
   currentAmount: number;
   backersCount: number;
   fundingType: 'all-or-nothing' | 'flexible';
   projectType: 'reward' | 'donation';
-  status: 'draft' | 'active' | 'funded' | 'expired' | 'cancelled';
+  status: 'draft' | 'pending_review' | 'active' | 'rejected' | 'funded' | 'expired' | 'cancelled';
   deadline: string;
   createdAt: string;
   updatedAt: string;

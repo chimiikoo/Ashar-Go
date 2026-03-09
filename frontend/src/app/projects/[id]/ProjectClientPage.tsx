@@ -59,6 +59,14 @@ export default function ProjectClientPage({ params }: { params: Promise<{ id: st
     const meta = categoryMeta[project.category];
     const Icon = meta.icon;
 
+    const getYoutubeEmbedUrl = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+    };
+
+    const embedUrl = getYoutubeEmbedUrl(project.videoUrl);
+
     const handlePledge = () => {
         setIsPledging(true);
         setTimeout(() => {
@@ -156,11 +164,25 @@ export default function ProjectClientPage({ params }: { params: Promise<{ id: st
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         marginBottom: '40px', overflow: 'hidden', position: 'relative'
                     }}>
-                        <img src={project.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <div style={{
-                            position: 'absolute', inset: 0,
-                            background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)'
-                        }} />
+                        {embedUrl ? (
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                src={embedUrl}
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        ) : (
+                            <>
+                                <img src={project.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)'
+                                }} />
+                            </>
+                        )}
                     </div>
 
                     {/* Tabs */}

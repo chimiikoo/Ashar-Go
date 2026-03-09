@@ -26,8 +26,9 @@ export interface Project {
     projectType: string;
     deadline: string;
     coverImage: string | null;
+    videoUrl: string; // Ссылка на YouTube (обязательно)
     gallery: string[];
-    status: string;
+    status: 'DRAFT' | 'PENDING_REVIEW' | 'ACTIVE' | 'REJECTED';
     authorId: string;
     createdAt: string;
 }
@@ -94,6 +95,7 @@ function seedProjects() {
             projectType: 'REWARD',
             deadline: new Date(Date.now() + (30 + i * 10) * 24 * 60 * 60 * 1000).toISOString(),
             coverImage: null,
+            videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             gallery: [],
             status: 'ACTIVE',
             authorId: demoAuthorId,

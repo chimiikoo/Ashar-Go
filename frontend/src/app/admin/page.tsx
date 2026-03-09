@@ -141,17 +141,24 @@ export default function AdminDashboard() {
                             </td>
                             <td style={{ padding: '16px', color: '#fff', fontSize: '14px', fontWeight: 600 }}>{p.goalAmount.toLocaleString()} сом</td>
                             <td style={{ padding: '16px' }}>
-                                <span style={{
-                                    padding: '4px 10px',
-                                    borderRadius: '20px',
-                                    fontSize: '11px',
-                                    fontWeight: 600,
-                                    background: p.status === 'active' ? '#10b98115' : '#f59e0b15',
-                                    color: p.status === 'active' ? '#10b981' : '#f59e0b',
-                                    border: p.status === 'active' ? '1px solid #10b98130' : '1px solid #f59e0b30'
-                                }}>
-                                    {p.status === 'active' ? 'Активен' : 'Черновик'}
-                                </span>
+                                {(() => {
+                                    const s = p.status.toLowerCase();
+                                    const colors = {
+                                        active: { bg: '#10b98115', text: '#10b981', border: '#10b98130', label: 'Активен' },
+                                        pending_review: { bg: '#f59e0b15', text: '#f59e0b', border: '#f59e0b30', label: 'На проверке' },
+                                        rejected: { bg: '#ef444415', text: '#ef4444', border: '#ef444430', label: 'Отклонен' },
+                                        draft: { bg: '#33333330', text: '#888', border: '#33333360', label: 'Черновик' },
+                                    };
+                                    const config = (colors as any)[s] || colors.draft;
+                                    return (
+                                        <span style={{
+                                            padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
+                                            background: config.bg, color: config.text, border: `1px solid ${config.border}`
+                                        }}>
+                                            {config.label}
+                                        </span>
+                                    );
+                                })()}
                             </td>
                             <td style={{ padding: '16px', textAlign: 'right' }}>
                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>

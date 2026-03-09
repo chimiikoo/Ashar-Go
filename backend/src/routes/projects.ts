@@ -23,7 +23,11 @@ router.get('/', async (req, res) => {
         const { category, status = 'ACTIVE', sort = 'popular', search, page = '1', limit = '12' } = req.query;
 
         let filtered = projects.filter(p => {
-            if (status && p.status !== status) return false;
+            if (status) {
+                if (p.status !== status) return false;
+            } else {
+                if (p.status !== 'ACTIVE') return false; // По умолчанию только активные
+            }
             if (category && p.category !== (category as string).toUpperCase()) return false;
             if (search) {
                 const s = (search as string).toLowerCase();
@@ -97,32 +101,28 @@ router.post('/', authenticateToken, async (req: any, res) => {
             fundingType: z.enum(['ALL_OR_NOTHING', 'FLEXIBLE']),
             projectType: z.enum(['REWARD', 'DONATION']).optional(),
             deadline: z.string(),
-            coverImage: z.string().optional(),
-            videoUrl: z.string().url().optional().or(z.literal('')),
-            photos: z.array(z.string()).max(5).optional(),
-            gallery: z.array(z.string()).optional(),
+            coverImage: z.string(), // Обязательная обложка
+            videoUrl: z.string().url(), // Обязательное видео (YouTube)
+            gallery: z.array(z.string()).max(5).optional(), // До 5 дополнительных фото
         });
 
         const data = schema.parse(req.body);
         const project = {
             id: createId(),
             ...data,
-            projectType: data.projectType || 'REWARD',
+            projectType: req.body.projectType || 'REWARD',
             authorId: req.user.userId,
             currentAmount: 0,
             gallery: data.gallery || [],
-            coverImage: data.coverImage || null,
-            status: 'DRAFT',
+            coverImage: data.coverImage,
+            videoUrl: data.videoUrl,
+            status: 'PENDING_REVIEW' as const, // Проект уходит на одобрение модератору
             createdAt: new Date().toISOString(),
         };
         projects.push(project);
         res.status(201).json(project);
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: 'Validation error', details: error.errors });
-        }
-        console.error('Create project error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+    } catch (err: any) {
+        res.status(400).json({ error: err.message || 'Ошибка создания проекта' });
     }
 });
 
@@ -164,6 +164,38 @@ router.post('/:id/comments', authenticateToken, async (req: any, res) => {
         }
         console.error('Comment error:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// ── PUT /api/projects/:id/approve — Одобрение (ADMIN) ─────────────────
+router.put('/:id/approve', authenticateToken, async (req: any, res) => {
+    try {
+        if (req.user.role !== 'ADMIN') {
+            return res.status(403).json({ error: 'Недостаточно прав' });
+        }
+        const project = projects.find(p => p.id === req.params.id);
+        if (!project) return res.status(404).json({ error: 'Проект не найден' });
+
+        project.status = 'ACTIVE';
+        res.json({ message: 'Проект успешно одобрен', project });
+    } catch (err: any) {
+        res.status(500).json({ error: 'Ошибка при одобрении проекта' });
+    }
+});
+
+// ── PUT /api/projects/:id/reject — Отклонение (ADMIN) ──────────────────
+router.put('/:id/reject', authenticateToken, async (req: any, res) => {
+    try {
+        if (req.user.role !== 'ADMIN') {
+            return res.status(403).json({ error: 'Недостаточно прав' });
+        }
+        const project = projects.find(p => p.id === req.params.id);
+        if (!project) return res.status(404).json({ error: 'Проект не найден' });
+
+        project.status = 'REJECTED';
+        res.json({ message: 'Проект отклонен', project });
+    } catch (err: any) {
+        res.status(500).json({ error: 'Ошибка при отклонении проекта' });
     }
 });
 

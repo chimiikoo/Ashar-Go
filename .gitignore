@@ -11,6 +11,7 @@ frontend/.env.local
 frontend/.env.production.local
 
 # ─── Build output ───────────────────────────────────────────────────
+frontend/dist/
 backend/dist/
 
 # ─── Environment files (sensitive) ──────────────────────────────────
